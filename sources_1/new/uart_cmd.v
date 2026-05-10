@@ -71,6 +71,10 @@ module uart_cmd (
                                     wave_sel <= 3'b111;
                                     dds_en   <= 1'b1;
                                 end
+                                8'h57, 8'h77: begin             // 'W','w' sine sweep
+                                    wave_sel <= 3'b100;
+                                    dds_en   <= 1'b1;
+                                end
                                 8'h53, 8'h73: dds_en <= 1'b0;   // 'S','s' pause
                                 8'h47, 8'h67: dds_en <= 1'b1;   // 'G','g' resume
                                 default: ;
@@ -104,6 +108,13 @@ module uart_cmd (
                                     resp_buf[2]="M"; resp_buf[3]="U";
                                     resp_buf[4]="L"; resp_buf[5]="T";
                                     resp_buf[6]="I"; resp_buf[7]=8'h0D;
+                                    resp_buf[8]=8'h0A; resp_len=5'd9;
+                                end
+                                8'h57, 8'h77: begin
+                                    resp_buf[0]=cmd_latched; resp_buf[1]=" ";
+                                    resp_buf[2]="S"; resp_buf[3]="W";
+                                    resp_buf[4]="E"; resp_buf[5]="E";
+                                    resp_buf[6]="P"; resp_buf[7]=8'h0D;
                                     resp_buf[8]=8'h0A; resp_len=5'd9;
                                 end
                                 8'h53, 8'h73: begin

@@ -143,8 +143,7 @@ module top_uart_dds (
     // ============================================================
     // Multi-frequency pin test mode
     // dac_data[0..13] = 1kHz..14kHz
-    // dac_clk/dac_wrt = 15kHz/16kHz
-    // gpio_test[0..11] = 17kHz..28kHz
+    // gpio_test[0..11] = 15kHz..26kHz
     // ============================================================
     localparam [31:0] PIN_TEST_BASE_FWORD = 32'd34360; // 1kHz at 125MHz
 
@@ -179,12 +178,7 @@ module top_uart_dds (
         pin_freq_acc[0][31]
     };
 
-    wire pin_freq_dac_clk = pin_freq_acc[14][31];
-    wire pin_freq_dac_wrt = pin_freq_acc[15][31];
-
     wire [11:0] pin_freq_gpio = {
-        pin_freq_acc[27][31],
-        pin_freq_acc[26][31],
         pin_freq_acc[25][31],
         pin_freq_acc[24][31],
         pin_freq_acc[23][31],
@@ -194,13 +188,19 @@ module top_uart_dds (
         pin_freq_acc[19][31],
         pin_freq_acc[18][31],
         pin_freq_acc[17][31],
-        pin_freq_acc[16][31]
+        pin_freq_acc[16][31],
+        pin_freq_acc[15][31],
+        pin_freq_acc[14][31]
     };
 
     wire [13:0] ad9767_sample_data = pin_freq_mode ? pin_freq_dac_data : dac_code;
 
     dds_core #(
-        .FWORD(32'd4294967)         // 1 KHz default at 1 MSPS
+        .FWORD(32'd171799),         // 1 KHz default at 25 MSPS
+        .SWEEP_FWORD_MIN(32'd171799),
+        .SWEEP_FWORD_MAX(32'd17179869),
+        .SWEEP_FWORD_STEP(32'd171799),
+        .SWEEP_HOLD_TICKS(32'd2500000)
     ) u_dds_core (
         .clk      (clk_125m),
         .rst      (por_rst),
@@ -216,7 +216,7 @@ module top_uart_dds (
     // ============================================================
     ad9767_parallel_if #(
         .CLK_FREQ_HZ(125_000_000),
-        .UPDATE_RATE_HZ(1_000_000),
+        .UPDATE_RATE_HZ(25_000_000),
         .DDS_LATENCY_CLKS(3),
         .DATA_SETUP_CLKS(2),
         .PULSE_HIGH_CLKS(2)
@@ -224,9 +224,6 @@ module top_uart_dds (
         .clk         (clk_125m),
         .rst         (por_rst),
         .sample_data (ad9767_sample_data),
-        .pin_freq_mode(pin_freq_mode),
-        .pin_freq_dac_clk(pin_freq_dac_clk),
-        .pin_freq_dac_wrt(pin_freq_dac_wrt),
         .dac_data    (dac_data),
         .dac_clk     (dac_clk),
         .dac_wrt     (dac_wrt),

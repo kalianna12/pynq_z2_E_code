@@ -1,19 +1,21 @@
 `timescale 1ns / 1ps
 
-// Sine ROM wrapper — instantiates Block Memory Generator IP
-//
-// IP 生成后，本模块例化名为 "sine_bram" 的 BMG IP。
-// 如果 IP 名称不同，修改下方 u_sine_bram 的模块名。
+// Sine lookup table: 4096 x 14-bit, inferred BRAM via $readmemh
+// Needs sine_4096x14.mem in the same source directory
 module sine_rom (
     input  wire        clk,
     input  wire [11:0] addr,
-    output wire [13:0] dout
+    output reg  [13:0] dout
 );
 
-    sine_bram u_sine_bram (
-        .clka  (clk),
-        .addra (addr),
-        .douta (dout)
-    );
+    (* ram_style = "block" *) reg [13:0] rom [0:4095];
+
+    initial begin
+        $readmemh("sine_4096x14.mem", rom);
+    end
+
+    always @(posedge clk) begin
+        dout <= rom[addr];
+    end
 
 endmodule

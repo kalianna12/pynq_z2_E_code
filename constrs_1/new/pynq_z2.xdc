@@ -48,13 +48,17 @@ set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[0]}]
 set_property PACKAGE_PIN W19 [get_ports {dac_data[1]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[1]}]
 
-set_property PACKAGE_PIN V6 [get_ports {dac_data[2]}]
+## Software fix from pin-frequency test:
+## DB2 measured as 4k and DB3 measured as 3k, so swap V6/Y18 in XDC.
+set_property PACKAGE_PIN Y18 [get_ports {dac_data[2]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[2]}]
 
-set_property PACKAGE_PIN Y18 [get_ports {dac_data[3]}]
+set_property PACKAGE_PIN V6 [get_ports {dac_data[3]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[3]}]
 
-set_property PACKAGE_PIN Y19 [get_ports {dac_data[4]}]
+## DB4 measured as 18k, matching the previous Y6 gpio_test output.
+## Keep the hardware wiring unchanged and map DB4 to Y6 in software.
+set_property PACKAGE_PIN Y6 [get_ports {dac_data[4]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[4]}]
 
 set_property PACKAGE_PIN U7 [get_ports {dac_data[5]}]
@@ -72,7 +76,8 @@ set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[8]}]
 set_property PACKAGE_PIN W6 [get_ports {dac_data[9]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[9]}]
 
-set_property PACKAGE_PIN U18 [get_ports {dac_data[10]}]
+## Y6 has no waveform; use Y16 instead.
+set_property PACKAGE_PIN Y16 [get_ports {dac_data[10]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[10]}]
 
 set_property PACKAGE_PIN V8 [get_ports {dac_data[11]}]
@@ -81,11 +86,57 @@ set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[11]}]
 set_property PACKAGE_PIN V10 [get_ports {dac_data[12]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[12]}]
 
-set_property PACKAGE_PIN U19 [get_ports {dac_data[13]}]
+## Y7 has no waveform; use W9 instead.
+set_property PACKAGE_PIN W9 [get_ports {dac_data[13]}]
 set_property IOSTANDARD LVCMOS33 [get_ports {dac_data[13]}]
 
-set_property PACKAGE_PIN W10 [get_ports dac_clk]
+## W10 measured bad; use W8 instead.
+set_property PACKAGE_PIN W8 [get_ports dac_clk]
 set_property IOSTANDARD LVCMOS33 [get_ports dac_clk]
 
-set_property PACKAGE_PIN F19 [get_ports dac_wrt]
+## F19 measured bad; use Y8 instead.
+set_property PACKAGE_PIN Y8 [get_ports dac_wrt]
 set_property IOSTANDARD LVCMOS33 [get_ports dac_wrt]
+
+## ============================================================
+## Extra Raspberry Pi header GPIO square-wave test outputs
+## These are not connected to AD9767 in the current pin map.
+## In default T-mode, all gpio_test pins output the same 1 KHz square wave.
+## ============================================================
+
+set_property PACKAGE_PIN Y7 [get_ports {gpio_test[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[0]}]
+
+## Y6 is now used by dac_data[4], so move gpio_test[1] to the freed Y19 pin.
+set_property PACKAGE_PIN Y19 [get_ports {gpio_test[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[1]}]
+
+set_property PACKAGE_PIN W10 [get_ports {gpio_test[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[2]}]
+
+set_property PACKAGE_PIN Y9 [get_ports {gpio_test[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[3]}]
+
+set_property PACKAGE_PIN A20 [get_ports {gpio_test[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[4]}]
+
+set_property PACKAGE_PIN B19 [get_ports {gpio_test[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[5]}]
+
+set_property PACKAGE_PIN B20 [get_ports {gpio_test[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[6]}]
+
+set_property PACKAGE_PIN Y17 [get_ports {gpio_test[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[7]}]
+
+set_property PACKAGE_PIN F20 [get_ports {gpio_test[8]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[8]}]
+
+set_property PACKAGE_PIN F19 [get_ports {gpio_test[9]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[9]}]
+
+set_property PACKAGE_PIN U19 [get_ports {gpio_test[10]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[10]}]
+
+set_property PACKAGE_PIN U18 [get_ports {gpio_test[11]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {gpio_test[11]}]

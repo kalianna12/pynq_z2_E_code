@@ -1,10 +1,10 @@
 `timescale 1ns / 1ps
 
 // ============================================================
-// PYNQ-Z2 UART DDS + AD9767 â€” Logic-Analyzer Test
+// PYNQ-Z2 UART DDS + AD9767 - Logic-Analyzer Test
 //
 // Default: T-mode (bits in group toggle at 1KHz)
-//   BTN0 press â†’ switch between group-0 (bits 7:0) and
+//   BTN0 press ¡ú switch between group-0 (bits 7:0) and
 //                             group-1 (bits 13:8)
 //
 // UART: '0' staircase, '1' sine, '2' square,
@@ -27,7 +27,13 @@ module top_uart_dds (
     output wire        dac_clk,
     output wire        dac_wrt,
 
-    output wire [11:0] gpio_test
+    output wire        ad7606_reset,
+    output wire        ad7606_convst_a,
+    output wire        ad7606_convst_b,
+    output wire        ad7606_cs_n,
+    output wire        ad7606_sclk,
+    input  wire        ad7606_douta,
+    input  wire        ad7606_busy
 );
 
     // ============================================================
@@ -42,7 +48,7 @@ module top_uart_dds (
     end
 
     // ============================================================
-    // BTN0 synchronize + edge detect â†’ group toggle
+    // BTN0 synchronize + edge detect ¡ú group toggle
     // ============================================================
     // ============================================================
     // Heartbeat LED (~0.93 Hz)
@@ -102,6 +108,15 @@ module top_uart_dds (
     wire [2:0] wave_sel;
     wire       dds_en;
     wire       pin_freq_mode = (wave_sel == 3'b111);
+    wire       adc_start;
+    wire       adc_busy;
+    wire       adc_done;
+    wire signed [15:0] adc_vin_max;
+    wire signed [15:0] adc_vin_min;
+    wire signed [15:0] adc_vout_max;
+    wire signed [15:0] adc_vout_min;
+    wire [16:0] adc_vin_pp;
+    wire [16:0] adc_vout_pp;
 
     uart_cmd u_uart_cmd (
         .clk      (clk_125m),
@@ -112,7 +127,16 @@ module top_uart_dds (
         .tx_start (tx_start),
         .tx_busy  (tx_busy),
         .wave_sel (wave_sel),
-        .dds_en   (dds_en)
+        .dds_en   (dds_en),
+        .adc_start(adc_start),
+        .adc_busy (adc_busy),
+        .adc_done (adc_done),
+        .adc_vin_max(adc_vin_max),
+        .adc_vin_min(adc_vin_min),
+        .adc_vout_max(adc_vout_max),
+        .adc_vout_min(adc_vout_min),
+        .adc_vin_pp(adc_vin_pp),
+        .adc_vout_pp(adc_vout_pp)
     );
 
     // ============================================================
@@ -143,7 +167,6 @@ module top_uart_dds (
     // ============================================================
     // Multi-frequency pin test mode
     // dac_data[0..13] = 1kHz..14kHz
-    // gpio_test[0..11] = 15kHz..26kHz
     // ============================================================
     localparam [31:0] PIN_TEST_BASE_FWORD = 32'd34360; // 1kHz at 125MHz
 
@@ -176,21 +199,6 @@ module top_uart_dds (
         pin_freq_acc[2][31],
         pin_freq_acc[1][31],
         pin_freq_acc[0][31]
-    };
-
-    wire [11:0] pin_freq_gpio = {
-        pin_freq_acc[25][31],
-        pin_freq_acc[24][31],
-        pin_freq_acc[23][31],
-        pin_freq_acc[22][31],
-        pin_freq_acc[21][31],
-        pin_freq_acc[20][31],
-        pin_freq_acc[19][31],
-        pin_freq_acc[18][31],
-        pin_freq_acc[17][31],
-        pin_freq_acc[16][31],
-        pin_freq_acc[15][31],
-        pin_freq_acc[14][31]
     };
 
     wire [13:0] ad9767_sample_data = pin_freq_mode ? pin_freq_dac_data : dac_code;
@@ -230,8 +238,32 @@ module top_uart_dds (
         .sample_tick (sample_tick)
     );
 
-    // Extra Raspberry Pi header GPIO pin test outputs.
-    // In default T-mode, dac_code[0] is a 1 KHz square wave.
-    assign gpio_test = pin_freq_mode ? pin_freq_gpio : {12{dac_code[0]}};
+    // ============================================================
+    // AD7606 serial reader
+    // ============================================================
+    ad7606_serial_reader #(
+        .CLK_FREQ_HZ(125_000_000),
+        .SCLK_DIV(25),
+        .SAMPLE_COUNT(256)
+    ) u_ad7606_reader (
+        .clk(clk_125m),
+        .rst(por_rst),
+        .start(adc_start),
+        .ad7606_reset(ad7606_reset),
+        .ad7606_convst_a(ad7606_convst_a),
+        .ad7606_convst_b(ad7606_convst_b),
+        .ad7606_cs_n(ad7606_cs_n),
+        .ad7606_sclk(ad7606_sclk),
+        .ad7606_douta(ad7606_douta),
+        .ad7606_busy(ad7606_busy),
+        .busy(adc_busy),
+        .done(adc_done),
+        .vin_max(adc_vin_max),
+        .vin_min(adc_vin_min),
+        .vout_max(adc_vout_max),
+        .vout_min(adc_vout_min),
+        .vin_pp(adc_vin_pp),
+        .vout_pp(adc_vout_pp)
+    );
 
 endmodule
